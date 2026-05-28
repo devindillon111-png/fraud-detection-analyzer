@@ -21,6 +21,8 @@ This project simulates a real-world fraud detection system used in internal audi
 - **Isolation Forest ML Model** — Unsupervised machine learning algorithm that detects statistical anomalies
 
 ## Project Structure
+
+```
 fraud-detection-analyzer/
 ├── data/
 │   └── transactions.csv        # 10,000 synthetic transactions
@@ -34,7 +36,7 @@ fraud-detection-analyzer/
     ├── benford_analysis.py      # Benford's Law analysis
     ├── anomaly_detection.py     # ML anomaly detection
     └── dashboard.py             # Streamlit interactive dashboard
-
+```
 ## Results
 
 - 10,000 transactions analyzed
