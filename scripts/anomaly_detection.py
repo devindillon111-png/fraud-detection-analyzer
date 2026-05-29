@@ -56,9 +56,6 @@ df['Rule_Flag_Count'] = (
     df['Is_Duplicate_Amount'].astype(int)
 )
 
-high_risk = df[df['Rule_Flag_Count'] >= 2]
-print(f"\nHigh risk transactions with 2+ flags: {len(high_risk)}")
-
 # --- PART 2: Isolation Forest ML ---
 print("\n" + "=" * 50)
 print("PART 2: ISOLATION FOREST ML MODEL")
@@ -88,6 +85,33 @@ df['Combined_Flag'] = ((df['Rule_Flag_Count'] >= 1) | (df['ML_Anomaly'] == 1)).a
 combined_count = df['Combined_Flag'].sum()
 print(f"\nTotal flagged transactions: {combined_count}")
 print(f"That is {combined_count/len(df)*100:.1f}% of all transactions")
+
+# --- Risk Scoring ---
+def calculate_risk_score(row):
+    score = 0
+    score += row['Rule_Flag_Count'] * 10
+    score += row['ML_Anomaly'] * 20
+    if row['Amount'] >= 5000:
+        score += 20
+    elif row['Amount'] >= 2000:
+        score += 10
+    elif row['Amount'] >= 1000:
+        score += 5
+    return min(score, 100)
+
+df['Risk_Score'] = df.apply(calculate_risk_score, axis=1)
+
+def assign_risk_level(score):
+    if score >= 70:
+        return 'High'
+    elif score >= 40:
+        return 'Medium'
+    else:
+        return 'Low'
+
+df['Risk_Level'] = df['Risk_Score'].apply(assign_risk_level)
+high_risk = df[df['Risk_Score'] >= 70]
+print(f"\nHigh risk transactions: {len(high_risk)}")
 
 # --- PART 3: Department Summary ---
 print("\n" + "=" * 50)
@@ -148,7 +172,8 @@ plt.show()
 flagged_df = df[df['Combined_Flag'] == 1][[
     'Transaction_ID', 'Date', 'Amount', 'Vendor_Name',
     'Employee_ID', 'Department', 'Approval_Status',
-    'Rule_Flag_Count', 'ML_Anomaly'
+    'Is_Weekend', 'Is_Round_Number', 'Is_Threshold', 'Missing_Vendor',
+    'Rule_Flag_Count', 'ML_Anomaly', 'Risk_Score', 'Risk_Level'
 ]]
 flagged_path = os.path.join(output_dir, "flagged_transactions.csv")
 flagged_df.to_csv(flagged_path, index=False)
